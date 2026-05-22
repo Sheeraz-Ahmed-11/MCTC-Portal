@@ -3,11 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfile } from "@/lib/auth";
-
-export type AuthState = {
-  error?: string;
-  message?: string;
-};
+import type { AuthState } from "@/app/(auth)/types";
 
 function safeRedirectPath(path: string | null | undefined, fallback: string) {
   if (path && path.startsWith("/") && !path.startsWith("//")) {
@@ -75,6 +71,14 @@ export async function signupAction(
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Supabase silently "succeeds" for duplicate emails instead of throwing an
+  // error. The identities array will be empty when the email is already taken.
+  if (data.user && data.user.identities?.length === 0) {
+    return {
+      error: "This email is already registered. Please sign in or reset your password.",
+    };
   }
 
   if (data.user) {
