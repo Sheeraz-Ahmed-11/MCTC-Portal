@@ -1,7 +1,8 @@
+// src/app/(portal)/dashboard/page.tsx
 import Link from "next/link";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { Trophy, Users, UserCheck } from "lucide-react";
+import { Trophy, Users, UserCheck, TrendingUp, Clock, ChevronRight } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireProfile } from "@/lib/auth";
 import { profiles, tournaments, athletes, rosterEntries } from "@/lib/db/schema";
@@ -49,10 +50,7 @@ export default async function DashboardPage() {
       .from(athletes)
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined),
     db
-      .select({
-        status: rosterEntries.status,
-        count: sql<number>`count(*)::int`,
-      })
+      .select({ status: rosterEntries.status, count: sql<number>`count(*)::int` })
       .from(rosterEntries)
       .leftJoin(athletes, eq(rosterEntries.athleteId, athletes.id))
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined)
@@ -182,16 +180,12 @@ export default async function DashboardPage() {
   ]);
 
   const totalAthletes = athleteCount[0]?.count ?? 0;
-  const confirmed =
-    rosterStats.find((s) => s.status === "confirmed")?.count ?? 0;
-  const registered =
-    rosterStats.find((s) => s.status === "registered")?.count ?? 0;
+  const confirmed = rosterStats.find((s) => s.status === "confirmed")?.count ?? 0;
+  const registered = rosterStats.find((s) => s.status === "registered")?.count ?? 0;
   const totalTeams = totalTeamsResult[0]?.count ?? 0;
   const pendingTeams = pendingTeamsResult[0]?.count ?? 0;
-  const activeAthletes =
-    athleteStatusStats.find((s) => s.status === "active")?.count ?? 0;
-  const inactiveAthletes =
-    athleteStatusStats.find((s) => s.status === "inactive")?.count ?? 0;
+  const activeAthletes = athleteStatusStats.find((s) => s.status === "active")?.count ?? 0;
+  const inactiveAthletes = athleteStatusStats.find((s) => s.status === "inactive")?.count ?? 0;
 
   const growthTrend = profileGrowth.map((profileItem) => {
     const athleteItem = athleteGrowth.find((item) => item.year === profileItem.year);
@@ -206,283 +200,331 @@ export default async function DashboardPage() {
   const upcoming = recentTournaments.filter((t) => t.year >= currentYear - 1);
 
   return (
-    <>
+    <div className="space-y-8">
       <PageHeader
-        title="Dashboard"
+        title={isAdmin ? "Admin Dashboard" : "Dashboard"}
         description={
           isAdmin
-            ? "Administrative overview of teams, athletes, tournament participation, and growth trends."
-            : "Overview of MCTC Spring and Fall tournament rosters."
+            ? "Overview of all teams, athletes, and tournament activity."
+            : "Your team's roster overview for MCTC tournaments."
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3 mb-10">
+      {/* ── Top stat cards ── */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
             label: "Athletes in directory",
             value: totalAthletes,
             icon: Users,
+            sub: isAdmin ? `${activeAthletes} active` : undefined,
           },
           {
             label: "Roster registrations",
             value: registered,
             icon: Trophy,
+            sub: "across all tournaments",
           },
           {
             label: "Confirmed competitors",
             value: confirmed,
             icon: UserCheck,
+            sub: "confirmed entries",
           },
-        ].map(({ label, value, icon: Icon }) => (
-          <Card key={label}>
-            <CardContent className="flex items-center gap-4 pt-6">
-              <div className="rounded-lg bg-primary/15 p-3">
-                <Icon className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{value}</p>
-                <p className="text-sm text-muted-foreground">{label}</p>
+          isAdmin
+            ? {
+                label: "Pending approvals",
+                value: pendingTeams,
+                icon: Clock,
+                sub: `${totalTeams} total teams`,
+                highlight: pendingTeams > 0,
+              }
+            : {
+                label: "Active athletes",
+                value: activeAthletes,
+                icon: TrendingUp,
+                sub: `${inactiveAthletes} inactive`,
+              },
+        ].map(({ label, value, icon: Icon, sub, highlight }) => (
+          <Card
+            key={label}
+            className={
+              highlight
+                ? "border-[#a33030]/30 bg-[#a33030]/5"
+                : "border-neutral-200 bg-white"
+            }
+          >
+            <CardContent className="pt-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-neutral-400">
+                    {label}
+                  </p>
+                  <p
+                    className={`mt-2 text-3xl font-bold ${
+                      highlight ? "text-[#a33030]" : "text-black"
+                    }`}
+                  >
+                    {value}
+                  </p>
+                  {sub && (
+                    <p className="mt-1 text-xs text-neutral-400">{sub}</p>
+                  )}
+                </div>
+                <div
+                  className={`rounded-lg p-2 ${
+                    highlight ? "bg-[#a33030]/10" : "bg-neutral-100"
+                  }`}
+                >
+                  <Icon
+                    className={`h-5 w-5 ${
+                      highlight ? "text-[#a33030]" : "text-neutral-500"
+                    }`}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {isAdmin ? (
+      {/* ── Admin-only sections ── */}
+      {isAdmin && (
         <>
-          <div className="grid gap-4 xl:grid-cols-3 mb-10">
-            <Card>
-              <CardHeader>
-                <CardTitle>Team registry</CardTitle>
+          {/* Breakdowns row */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="border-neutral-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
+                  Event type
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">Registered teams</p>
-                  <p className="text-2xl font-bold">{totalTeams}</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">Pending approvals</p>
-                  <Badge variant="secondary">{pendingTeams}</Badge>
-                </div>
+                {eventTypeStats.map((item) => (
+                  <div key={item.eventType} className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-600">{item.eventType}</span>
+                    <span className="text-sm font-bold text-black">{item.count}</span>
+                  </div>
+                ))}
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Athlete activity</CardTitle>
+            <Card className="border-neutral-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
+                  Gender
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">Active athletes</p>
-                  <p className="text-2xl font-bold">{activeAthletes}</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">Inactive athletes</p>
-                  <p className="text-2xl font-bold">{inactiveAthletes}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Breakdowns</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid gap-2">
-                  {eventTypeStats.map((item) => (
-                    <div key={item.eventType} className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{item.eventType}</span>
-                      <span className="font-semibold">{item.count}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-4 xl:grid-cols-2 mb-10">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gender breakdown</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
                 {genderStats.map((item) => (
                   <div key={item.gender} className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{item.gender}</span>
-                    <span className="font-semibold">{item.count}</span>
+                    <span className="text-sm text-neutral-600">{item.gender}</span>
+                    <span className="text-sm font-bold text-black">{item.count}</span>
                   </div>
                 ))}
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Belt rank breakdown</CardTitle>
+
+            <Card className="border-neutral-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
+                  Belt rank
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 {beltStats.map((item) => (
                   <div key={item.beltRank} className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{item.beltRank.replace("_", " ")}</span>
-                    <span className="font-semibold">{item.count}</span>
+                    <span className="text-sm text-neutral-600">
+                      {item.beltRank.replace("_", " ")}
+                    </span>
+                    <span className="text-sm font-bold text-black">{item.count}</span>
                   </div>
                 ))}
               </CardContent>
             </Card>
           </div>
 
-          <Card className="mb-10">
-            <CardHeader>
-              <CardTitle>Top teams by athlete count</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
+          {/* Growth chart + top teams */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <GrowthTrendChart data={growthTrend} />
+
+            <Card className="border-neutral-200">
+              <CardHeader>
+                <CardTitle>Top teams by athlete count</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <table className="w-full text-sm">
-                  <thead className="border-b border-border text-left text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    <tr>
-                      <th className="py-3">Team</th>
-                      <th className="py-3 text-right">Athletes</th>
+                  <thead>
+                    <tr className="border-b border-neutral-100">
+                      <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                        Team
+                      </th>
+                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                        Athletes
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {perTeamCounts.map((team) => (
-                      <tr key={team.teamName} className="border-b border-border">
-                        <td className="py-3">{team.teamName}</td>
-                        <td className="py-3 text-right font-semibold">{team.athleteCount}</td>
+                    {perTeamCounts.map((team, i) => (
+                      <tr key={team.teamName} className="border-b border-neutral-50 last:border-0">
+                        <td className="py-2.5 text-neutral-700">{team.teamName}</td>
+                        <td className="py-2.5 text-right font-semibold text-black">
+                          {team.athleteCount}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
-          <div className="grid gap-4 xl:grid-cols-2 mb-10">
-            <Card>
+          {/* Tournament participation + team history */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="border-neutral-200">
               <CardHeader>
                 <CardTitle>Tournament participation</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-border text-left text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      <tr>
-                        <th className="py-3">Tournament</th>
-                        <th className="py-3">Season</th>
-                        <th className="py-3 text-right">Entries</th>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-neutral-100">
+                      <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-400">Tournament</th>
+                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wider text-neutral-400">Entries</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tournamentParticipation.map((item) => (
+                      <tr key={item.tournamentId} className="border-b border-neutral-50 last:border-0">
+                        <td className="py-2.5 text-neutral-700">
+                          {item.season === "spring" ? "Spring" : "Fall"} {item.year}
+                          {item.tournamentName ? ` — ${item.tournamentName}` : ""}
+                        </td>
+                        <td className="py-2.5 text-right font-semibold text-black">
+                          {item.count}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {tournamentParticipation.map((item) => (
-                        <tr key={item.tournamentId} className="border-b border-border">
-                          <td className="py-3">{item.tournamentName || "Unnamed"}</td>
-                          <td className="py-3">
-                            {item.tournamentName
-                              ? `${item.tournamentName} (${item.season === "spring" ? "Spring" : "Fall"} ${item.year})`
-                              : `${item.season === "spring" ? "Spring" : "Fall"} ${item.year}`}
-                          </td>
-                          <td className="py-3 text-right font-semibold">{item.count}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-neutral-200">
               <CardHeader>
                 <CardTitle>Team history</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-border text-left text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      <tr>
-                        <th className="py-3">Team</th>
-                        <th className="py-3 text-right">Tournaments</th>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-neutral-100">
+                      <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-400">Team</th>
+                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wider text-neutral-400">Tournaments</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {teamHistory.map((item) => (
+                      <tr key={item.teamName} className="border-b border-neutral-50 last:border-0">
+                        <td className="py-2.5 text-neutral-700">{item.teamName}</td>
+                        <td className="py-2.5 text-right font-semibold text-black">
+                          {item.tournaments}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {teamHistory.map((item) => (
-                        <tr key={item.teamName} className="border-b border-border">
-                          <td className="py-3">{item.teamName}</td>
-                          <td className="py-3 text-right font-semibold">{item.tournaments}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </CardContent>
             </Card>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2 mb-10">
-            <Card>
-              <CardHeader>
-                <CardTitle>Athlete history</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-border text-left text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      <tr>
-                        <th className="py-3">Athlete</th>
-                        <th className="py-3 text-right">Appearances</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {athleteHistory.map((item) => (
-                        <tr key={item.athleteName} className="border-b border-border">
-                          <td className="py-3">{item.athleteName}</td>
-                          <td className="py-3 text-right font-semibold">{item.appearances}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-            <GrowthTrendChart data={growthTrend} />
-          </div>
+          {/* Athlete history */}
+          <Card className="border-neutral-200">
+            <CardHeader>
+              <CardTitle>Athlete history — top appearances</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-100">
+                    <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-400">Athlete</th>
+                    <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wider text-neutral-400">Appearances</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {athleteHistory.map((item) => (
+                    <tr key={item.athleteName} className="border-b border-neutral-50 last:border-0">
+                      <td className="py-2.5 text-neutral-700">{item.athleteName}</td>
+                      <td className="py-2.5 text-right font-semibold text-black">
+                        {item.appearances}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
         </>
-      ) : null}
+      )}
 
-      <Card>
-        <CardHeader>
+      {/* ── Recent tournaments (all roles) ── */}
+      <Card className="border-neutral-200">
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent tournaments</CardTitle>
+          {isAdmin && (
+            <Link
+              href="/tournaments/new"
+              className="text-xs font-medium text-[#a33030] hover:underline"
+            >
+              + New tournament
+            </Link>
+          )}
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent>
           {upcoming.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No tournaments yet.{" "}
-              <Link href="/tournaments/new" className="text-primary">
-                Create the first one
-              </Link>
-              .
-            </p>
+            <div className="rounded-lg border border-dashed border-neutral-200 py-10 text-center">
+              <Trophy className="mx-auto mb-3 h-8 w-8 text-neutral-300" />
+              <p className="text-sm text-neutral-400">No tournaments yet.</p>
+              {isAdmin && (
+                <Link
+                  href="/tournaments/new"
+                  className="mt-2 inline-block text-sm font-medium text-[#a33030] hover:underline"
+                >
+                  Create the first one
+                </Link>
+              )}
+            </div>
           ) : (
-            upcoming.map((t) => (
-              <Link
-                key={t.id}
-                href={`/tournaments/${t.id}`}
-                className="flex items-center justify-between rounded-lg border border-border px-4 py-3 hover:bg-muted transition-colors"
-              >
-                <div>
-                  <p className="font-medium">
-                    {tournamentLabel(t.season, t.year, t.name)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {t.location ?? "Location TBD"}
-                    {t.startDate ? ` · ${formatDate(t.startDate)}` : ""}
-                  </p>
-                </div>
-                <Badge>
-                  {t.rosterEntries.length} on roster
-                </Badge>
-              </Link>
-            ))
+            <div className="space-y-2">
+              {upcoming.map((t) => (
+                <Link
+                  key={t.id}
+                  href={`/tournaments/${t.id}`}
+                  className="flex items-center justify-between rounded-lg border border-neutral-100 px-4 py-3.5 transition hover:border-[#a33030]/20 hover:bg-neutral-50"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-black">
+                      {tournamentLabel(t.season, t.year, t.name)}
+                    </p>
+                    <p className="mt-0.5 text-xs text-neutral-400">
+                      {t.location ?? "Location TBD"}
+                      {t.startDate ? ` · ${formatDate(t.startDate)}` : ""}
+                    </p>
+                  </div>
+                  <div className="ml-4 flex items-center gap-2 shrink-0">
+                    <Badge
+                      variant="secondary"
+                      className="bg-neutral-100 text-neutral-600 hover:bg-neutral-100"
+                    >
+                      {t.rosterEntries.length} on roster
+                    </Badge>
+                    <ChevronRight className="h-4 w-4 text-neutral-300" />
+                  </div>
+                </Link>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }
