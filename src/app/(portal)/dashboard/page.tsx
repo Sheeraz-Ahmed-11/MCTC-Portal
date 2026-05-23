@@ -49,55 +49,44 @@ export default async function DashboardPage() {
     db.select({ count: sql<number>`count(*)::int` })
       .from(athletes)
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined),
-    db
-      .select({ status: rosterEntries.status, count: sql<number>`count(*)::int` })
+    db.select({ status: rosterEntries.status, count: sql<number>`count(*)::int` })
       .from(rosterEntries)
       .leftJoin(athletes, eq(rosterEntries.athleteId, athletes.id))
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined)
       .groupBy(rosterEntries.status),
-    db
-      .select({ count: sql<number>`count(*)::int` })
+    db.select({ count: sql<number>`count(*)::int` })
       .from(profiles)
       .where(
         profile.role === "coach"
           ? and(eq(profiles.id, profile.id), sql`team_name IS NOT NULL AND role = 'coach'`)
           : sql`team_name IS NOT NULL AND role = 'coach'`,
       ),
-    db
-      .select({ count: sql<number>`count(*)::int` })
+    db.select({ count: sql<number>`count(*)::int` })
       .from(profiles)
       .where(
         profile.role === "coach"
           ? and(eq(profiles.id, profile.id), sql`role = 'coach' AND status = 'pending'`)
           : sql`role = 'coach' AND status = 'pending'`,
       ),
-    db
-      .select({ status: athletes.status, count: sql<number>`count(*)::int` })
+    db.select({ status: athletes.status, count: sql<number>`count(*)::int` })
       .from(athletes)
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined)
       .groupBy(athletes.status),
-    db
-      .select({ eventType: athletes.eventType, count: sql<number>`count(*)::int` })
+    db.select({ eventType: athletes.eventType, count: sql<number>`count(*)::int` })
       .from(athletes)
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined)
       .groupBy(athletes.eventType),
-    db
-      .select({ gender: athletes.gender, count: sql<number>`count(*)::int` })
+    db.select({ gender: athletes.gender, count: sql<number>`count(*)::int` })
       .from(athletes)
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined)
       .groupBy(athletes.gender),
-    db
-      .select({ beltRank: athletes.beltRank, count: sql<number>`count(*)::int` })
+    db.select({ beltRank: athletes.beltRank, count: sql<number>`count(*)::int` })
       .from(athletes)
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined)
       .groupBy(athletes.beltRank)
       .orderBy(sql`count(*) DESC`)
       .limit(8),
-    db
-      .select({
-        teamName: profiles.teamName,
-        athleteCount: sql<number>`count(*)::int`,
-      })
+    db.select({ teamName: profiles.teamName, athleteCount: sql<number>`count(*)::int` })
       .from(athletes)
       .leftJoin(profiles, eq(athletes.createdBy, profiles.id))
       .where(
@@ -108,8 +97,7 @@ export default async function DashboardPage() {
       .groupBy(profiles.teamName)
       .orderBy(sql`count(*) DESC`)
       .limit(6),
-    db
-      .select({
+    db.select({
         tournamentId: rosterEntries.tournamentId,
         tournamentName: tournaments.name,
         season: tournaments.season,
@@ -120,19 +108,9 @@ export default async function DashboardPage() {
       .leftJoin(athletes, eq(rosterEntries.athleteId, athletes.id))
       .leftJoin(tournaments, eq(rosterEntries.tournamentId, tournaments.id))
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined)
-      .groupBy(
-        rosterEntries.tournamentId,
-        tournaments.name,
-        tournaments.season,
-        tournaments.year,
-        tournaments.createdAt,
-      )
+      .groupBy(rosterEntries.tournamentId, tournaments.name, tournaments.season, tournaments.year, tournaments.createdAt)
       .orderBy(desc(tournaments.year), desc(tournaments.createdAt)),
-    db
-      .select({
-        teamName: profiles.teamName,
-        tournaments: sql<number>`count(distinct roster_entries.tournament_id)::int`,
-      })
+    db.select({ teamName: profiles.teamName, tournaments: sql<number>`count(distinct roster_entries.tournament_id)::int` })
       .from(rosterEntries)
       .leftJoin(athletes, eq(rosterEntries.athleteId, athletes.id))
       .leftJoin(profiles, eq(athletes.createdBy, profiles.id))
@@ -144,8 +122,7 @@ export default async function DashboardPage() {
       .groupBy(profiles.teamName)
       .orderBy(sql`count(distinct roster_entries.tournament_id) DESC`)
       .limit(6),
-    db
-      .select({
+    db.select({
         athleteName: sql<string>`concat(${athletes.firstName}, ' ', ${athletes.lastName})`,
         appearances: sql<number>`count(*)::int`,
       })
@@ -155,11 +132,7 @@ export default async function DashboardPage() {
       .groupBy(athletes.id, athletes.firstName, athletes.lastName)
       .orderBy(sql`count(*) DESC`)
       .limit(6),
-    db
-      .select({
-        year: sql<number>`extract(year from profiles.created_at)::int`,
-        teams: sql<number>`count(*)::int`,
-      })
+    db.select({ year: sql<number>`extract(year from profiles.created_at)::int`, teams: sql<number>`count(*)::int` })
       .from(profiles)
       .where(
         profile.role === "coach"
@@ -168,11 +141,7 @@ export default async function DashboardPage() {
       )
       .groupBy(sql`extract(year from profiles.created_at)::int`)
       .orderBy(sql`extract(year from profiles.created_at)::int`),
-    db
-      .select({
-        year: sql<number>`extract(year from athletes.created_at)::int`,
-        athletes: sql<number>`count(*)::int`,
-      })
+    db.select({ year: sql<number>`extract(year from athletes.created_at)::int`, athletes: sql<number>`count(*)::int` })
       .from(athletes)
       .where(profile.role === "coach" ? eq(athletes.createdBy, profile.id) : undefined)
       .groupBy(sql`extract(year from athletes.created_at)::int`)
@@ -189,15 +158,18 @@ export default async function DashboardPage() {
 
   const growthTrend = profileGrowth.map((profileItem) => {
     const athleteItem = athleteGrowth.find((item) => item.year === profileItem.year);
-    return {
-      year: profileItem.year,
-      teams: profileItem.teams,
-      athletes: athleteItem?.athletes ?? 0,
-    };
+    return { year: profileItem.year, teams: profileItem.teams, athletes: athleteItem?.athletes ?? 0 };
   });
 
   const currentYear = new Date().getFullYear();
   const upcoming = recentTournaments.filter((t) => t.year >= currentYear - 1);
+
+  /* ── Shared table styles ── */
+  const th = "pb-3 text-left text-[11px] font-semibold uppercase tracking-wider text-white/30";
+  const thRight = "pb-3 text-right text-[11px] font-semibold uppercase tracking-wider text-white/30";
+  const tr = "border-b border-white/[0.05] last:border-0";
+  const td = "py-2.5 text-sm text-white/70";
+  const tdRight = "py-2.5 text-right text-sm font-semibold text-white";
 
   return (
     <div className="space-y-8">
@@ -210,7 +182,7 @@ export default async function DashboardPage() {
         }
       />
 
-      {/* ── Top stat cards ── */}
+      {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
@@ -218,313 +190,217 @@ export default async function DashboardPage() {
             value: totalAthletes,
             icon: Users,
             sub: isAdmin ? `${activeAthletes} active` : undefined,
+            highlight: false,
           },
           {
             label: "Roster registrations",
             value: registered,
             icon: Trophy,
             sub: "across all tournaments",
+            highlight: false,
           },
           {
             label: "Confirmed competitors",
             value: confirmed,
             icon: UserCheck,
             sub: "confirmed entries",
+            highlight: false,
           },
           isAdmin
-            ? {
-                label: "Pending approvals",
-                value: pendingTeams,
-                icon: Clock,
-                sub: `${totalTeams} total teams`,
-                highlight: pendingTeams > 0,
-              }
-            : {
-                label: "Active athletes",
-                value: activeAthletes,
-                icon: TrendingUp,
-                sub: `${inactiveAthletes} inactive`,
-              },
+            ? { label: "Pending approvals", value: pendingTeams, icon: Clock, sub: `${totalTeams} total teams`, highlight: pendingTeams > 0 }
+            : { label: "Active athletes", value: activeAthletes, icon: TrendingUp, sub: `${inactiveAthletes} inactive`, highlight: false },
         ].map(({ label, value, icon: Icon, sub, highlight }) => (
-          <Card
+          <div
             key={label}
-            className={
+            className={`rounded-xl border p-5 ${
               highlight
-                ? "border-[#a33030]/30 bg-[#a33030]/5"
-                : "border-neutral-200 bg-white"
-            }
+                ? "border-[#a33030]/40 bg-[#a33030]/10"
+                : "border-white/8 bg-[#161616]"
+            }`}
           >
-            <CardContent className="pt-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wider text-neutral-400">
-                    {label}
-                  </p>
-                  <p
-                    className={`mt-2 text-3xl font-bold ${
-                      highlight ? "text-[#a33030]" : "text-black"
-                    }`}
-                  >
-                    {value}
-                  </p>
-                  {sub && (
-                    <p className="mt-1 text-xs text-neutral-400">{sub}</p>
-                  )}
-                </div>
-                <div
-                  className={`rounded-lg p-2 ${
-                    highlight ? "bg-[#a33030]/10" : "bg-neutral-100"
-                  }`}
-                >
-                  <Icon
-                    className={`h-5 w-5 ${
-                      highlight ? "text-[#a33030]" : "text-neutral-500"
-                    }`}
-                  />
-                </div>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/35">
+                  {label}
+                </p>
+                <p className={`mt-2 text-3xl font-bold ${highlight ? "text-[#c45050]" : "text-white"}`}>
+                  {value}
+                </p>
+                {sub && <p className="mt-1 text-xs text-white/30">{sub}</p>}
               </div>
-            </CardContent>
-          </Card>
+              <div className={`rounded-lg p-2 ${highlight ? "bg-[#a33030]/20" : "bg-white/6"}`}>
+                <Icon className={`h-5 w-5 ${highlight ? "text-[#c45050]" : "text-white/40"}`} />
+              </div>
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* ── Admin-only sections ── */}
+      {/* Admin sections */}
       {isAdmin && (
         <>
-          {/* Breakdowns row */}
+          {/* Breakdowns */}
           <div className="grid gap-4 lg:grid-cols-3">
-            <Card className="border-neutral-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
-                  Event type
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {eventTypeStats.map((item) => (
-                  <div key={item.eventType} className="flex items-center justify-between">
-                    <span className="text-sm text-neutral-600">{item.eventType}</span>
-                    <span className="text-sm font-bold text-black">{item.count}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card className="border-neutral-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
-                  Gender
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {genderStats.map((item) => (
-                  <div key={item.gender} className="flex items-center justify-between">
-                    <span className="text-sm text-neutral-600">{item.gender}</span>
-                    <span className="text-sm font-bold text-black">{item.count}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card className="border-neutral-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
-                  Belt rank
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {beltStats.map((item) => (
-                  <div key={item.beltRank} className="flex items-center justify-between">
-                    <span className="text-sm text-neutral-600">
-                      {item.beltRank.replace("_", " ")}
-                    </span>
-                    <span className="text-sm font-bold text-black">{item.count}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            {[
+              { title: "Event type", rows: eventTypeStats.map((i) => ({ label: i.eventType, value: i.count })) },
+              { title: "Gender", rows: genderStats.map((i) => ({ label: i.gender, value: i.count })) },
+              { title: "Belt rank", rows: beltStats.map((i) => ({ label: i.beltRank.replace("_", " "), value: i.count })) },
+            ].map(({ title, rows }) => (
+              <div key={title} className="rounded-xl border border-white/8 bg-[#161616] p-5">
+                <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-white/35">{title}</p>
+                <div className="space-y-3">
+                  {rows.map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <span className="text-sm text-white/60">{label}</span>
+                      <span className="text-sm font-bold text-white">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Growth chart + top teams */}
           <div className="grid gap-4 lg:grid-cols-2">
             <GrowthTrendChart data={growthTrend} />
-
-            <Card className="border-neutral-200">
-              <CardHeader>
-                <CardTitle>Top teams by athlete count</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-neutral-100">
-                      <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-400">
-                        Team
-                      </th>
-                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wider text-neutral-400">
-                        Athletes
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {perTeamCounts.map((team, i) => (
-                      <tr key={team.teamName} className="border-b border-neutral-50 last:border-0">
-                        <td className="py-2.5 text-neutral-700">{team.teamName}</td>
-                        <td className="py-2.5 text-right font-semibold text-black">
-                          {team.athleteCount}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Tournament participation + team history */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="border-neutral-200">
-              <CardHeader>
-                <CardTitle>Tournament participation</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-neutral-100">
-                      <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-400">Tournament</th>
-                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wider text-neutral-400">Entries</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tournamentParticipation.map((item) => (
-                      <tr key={item.tournamentId} className="border-b border-neutral-50 last:border-0">
-                        <td className="py-2.5 text-neutral-700">
-                          {item.season === "spring" ? "Spring" : "Fall"} {item.year}
-                          {item.tournamentName ? ` — ${item.tournamentName}` : ""}
-                        </td>
-                        <td className="py-2.5 text-right font-semibold text-black">
-                          {item.count}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-
-            <Card className="border-neutral-200">
-              <CardHeader>
-                <CardTitle>Team history</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-neutral-100">
-                      <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-400">Team</th>
-                      <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wider text-neutral-400">Tournaments</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {teamHistory.map((item) => (
-                      <tr key={item.teamName} className="border-b border-neutral-50 last:border-0">
-                        <td className="py-2.5 text-neutral-700">{item.teamName}</td>
-                        <td className="py-2.5 text-right font-semibold text-black">
-                          {item.tournaments}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Athlete history */}
-          <Card className="border-neutral-200">
-            <CardHeader>
-              <CardTitle>Athlete history — top appearances</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <table className="w-full text-sm">
+            <div className="rounded-xl border border-white/8 bg-[#161616] p-5">
+              <p className="mb-4 text-sm font-semibold text-white">Top teams by athlete count</p>
+              <table className="w-full">
                 <thead>
-                  <tr className="border-b border-neutral-100">
-                    <th className="pb-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-400">Athlete</th>
-                    <th className="pb-3 text-right text-xs font-semibold uppercase tracking-wider text-neutral-400">Appearances</th>
+                  <tr className="border-b border-white/8">
+                    <th className={th}>Team</th>
+                    <th className={thRight}>Athletes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {athleteHistory.map((item) => (
-                    <tr key={item.athleteName} className="border-b border-neutral-50 last:border-0">
-                      <td className="py-2.5 text-neutral-700">{item.athleteName}</td>
-                      <td className="py-2.5 text-right font-semibold text-black">
-                        {item.appearances}
-                      </td>
+                  {perTeamCounts.map((team) => (
+                    <tr key={team.teamName} className={tr}>
+                      <td className={td}>{team.teamName}</td>
+                      <td className={tdRight}>{team.athleteCount}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          {/* Tournament participation + team history */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border border-white/8 bg-[#161616] p-5">
+              <p className="mb-4 text-sm font-semibold text-white">Tournament participation</p>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/8">
+                    <th className={th}>Tournament</th>
+                    <th className={thRight}>Entries</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tournamentParticipation.map((item) => (
+                    <tr key={item.tournamentId} className={tr}>
+                      <td className={td}>
+                        {item.season === "spring" ? "Spring" : "Fall"} {item.year}
+                        {item.tournamentName ? ` — ${item.tournamentName}` : ""}
+                      </td>
+                      <td className={tdRight}>{item.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="rounded-xl border border-white/8#161616] p-5">
+              <p className="mb-4 text-sm font-semibold text-white">Team history</p>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/8">
+                    <th className={th}>Team</th>
+                    <th className={thRight}>Tournaments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teamHistory.map((item) => (
+                    <tr key={item.teamName} className={tr}>
+                      <td className={td}>{item.teamName}</td>
+                      <td className={tdRight}>{item.tournaments}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Athlete history */}
+          <div className="rounded-xl border border-white/8 bg-[#161616] p-5">
+            <p className="mb-4 text-sm font-semibold text-white">Athlete history — top appearances</p>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/8">
+                  <th className={th}>Athlete</th>
+                  <th className={thRight}>Appearances</th>
+                </tr>
+              </thead>
+              <tbody>
+                {athleteHistory.map((item) => (
+                  <tr key={item.athleteName} className={tr}>
+                    <td className={td}>{item.athleteName}</td>
+                    <td className={tdRight}>{item.appearances}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
 
-      {/* ── Recent tournaments (all roles) ── */}
-      <Card className="border-neutral-200">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent tournaments</CardTitle>
+      {/* Recent tournaments */}
+      <div className="rounded-xl border border-white/8 bg-[#161616] p-5">
+        <div className="mb-5 flex items-center justify-between">
+          <p className="text-sm font-semibold text-white">Recent tournaments</p>
           {isAdmin && (
-            <Link
-              href="/tournaments/new"
-              className="text-xs font-medium text-[#a33030] hover:underline"
-            >
+            <Link href="/tournaments/new" className="text-xs font-medium text-[#c45050] hover:underline">
               + New tournament
             </Link>
           )}
-        </CardHeader>
-        <CardContent>
-          {upcoming.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-neutral-200 py-10 text-center">
-              <Trophy className="mx-auto mb-3 h-8 w-8 text-neutral-300" />
-              <p className="text-sm text-neutral-400">No tournaments yet.</p>
-              {isAdmin && (
-                <Link
-                  href="/tournaments/new"
-                  className="mt-2 inline-block text-sm font-medium text-[#a33030] hover:underline"
-                >
-                  Create the first one
-                </Link>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {upcoming.map((t) => (
-                <Link
-                  key={t.id}
-                  href={`/tournaments/${t.id}`}
-                  className="flex items-center justify-between rounded-lg border border-neutral-100 px-4 py-3.5 transition hover:border-[#a33030]/20 hover:bg-neutral-50"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-black">
-                      {tournamentLabel(t.season, t.year, t.name)}
-                    </p>
-                    <p className="mt-0.5 text-xs text-neutral-400">
-                      {t.location ?? "Location TBD"}
-                      {t.startDate ? ` · ${formatDate(t.startDate)}` : ""}
-                    </p>
-                  </div>
-                  <div className="ml-4 flex items-center gap-2 shrink-0">
-                    <Badge
-                      variant="secondary"
-                      className="bg-neutral-100 text-neutral-600 hover:bg-neutral-100"
-                    >
-                      {t.rosterEntries.length} on roster
-                    </Badge>
-                    <ChevronRight className="h-4 w-4 text-neutral-300" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {upcoming.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-white/8 py-10 text-center">
+            <Trophy className="mx-auto mb-3 h-8 w-8 text-white/20" />
+            <p className="text-sm text-white/35">No tournaments yet.</p>
+            {isAdmin && (
+              <Link href="/tournaments/new" className="mt-2 inline-block text-sm font-medium text-[#c45050] hover:underline">
+                Create the first one
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {upcoming.map((t) => (
+              <Link
+                key={t.id}
+                href={`/tournaments/${t.id}`}
+                className="flex items-center justify-between rounded-lg border border-white/6 px-4 py-3.5 transition hover:border-[#a33030]/30 hover:bg-white/3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-white">
+                    {tournamentLabel(t.season, t.year, t.name)}
+                  </p>
+                  <p className="mt-0.5 text-xs text-white/35">
+                    {t.location ?? "Location TBD"}
+                    {t.startDate ? ` · ${formatDate(t.startDate)}` : ""}
+                  </p>
+                </div>
+                <div className="ml-4 flex items-center gap-2 shrink-0">
+                  <span className="rounded-md bg-white/8 px-2.5 py-1 text-xs font-medium text-white/60">
+                    {t.rosterEntries.length} on roster
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-white/20" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -24,11 +24,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: blackLogo.src, type: "image/svg+xml" },
-      {
-        url: whiteLogo.src,
-        type: "image/svg+xml",
-        media: "(prefers-color-scheme: dark)",
-      },
+      { url: whiteLogo.src, type: "image/svg+xml", media: "(prefers-color-scheme: dark)" },
     ],
     shortcut: blackLogo.src,
     apple: blackLogo.src,
