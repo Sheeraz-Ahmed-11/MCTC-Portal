@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ensureProfile } from "@/lib/auth";
-import type { AuthState } from "@/app/(auth)/types";
+import type { export AuthState } from "@/app/(auth)/types";
 
 function safeRedirectPath(path: string | null | undefined, fallback: string) {
   if (path && path.startsWith("/") && !path.startsWith("//")) {
