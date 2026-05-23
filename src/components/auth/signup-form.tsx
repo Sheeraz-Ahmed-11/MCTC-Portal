@@ -1,5 +1,4 @@
 "use client";
-
 import { useActionState } from "react";
 import { signupAction } from "@/app/(auth)/actions";
 import type { AuthState } from "@/app/(auth)/types";
@@ -17,16 +16,16 @@ export function SignupForm() {
       action={formAction}
       className="rounded-3xl border border-border bg-card p-6 space-y-4 shadow-xl shadow-black/5"
     >
-      {state.error ? (
-        <p className="rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+      {state.error && (
+        <p className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm text-red-400">
           {state.error}
         </p>
-      ) : null}
-      {state.message ? (
-        <p className="rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+      )}
+      {state.message && (
+        <p className="rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-2 text-sm text-green-400">
           {state.message}
         </p>
-      ) : null}
+      )}
       <div className="space-y-2">
         <Label htmlFor="teamName">Team name</Label>
         <Input id="teamName" name="teamName" required />
@@ -37,24 +36,11 @@ export function SignupForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-        />
+        <Input id="email" name="email" type="email" autoComplete="email" required />
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-        />
+        <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
       </div>
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Creating account…" : "Create account"}
