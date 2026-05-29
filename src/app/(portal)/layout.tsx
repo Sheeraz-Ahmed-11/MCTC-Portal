@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { PortalNav } from "@/components/layout/portal-nav";
+import { authPanelClassName } from "@/components/auth/auth-panel-background";
 import { ensureProfile, getSessionUser, mustCompleteOnboarding } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,13 @@ export default async function PortalLayout({
   }
 
   if (onOnboarding) {
-    return <>{children}</>;
+    return (
+      <div className={`${authPanelClassName} min-h-svh`}>
+        <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center py-2">
+          <div className="w-full max-w-4xl">{children}</div>
+        </div>
+      </div>
+    );
   }
 
   return (
