@@ -1,23 +1,41 @@
-export const dynamic = "force-dynamic";
-
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { PortalNav } from "@/components/layout/portal-nav";
-import { getSessionUser, ensureProfile } from "@/lib/auth";
+import { ensureProfile, getSessionUser, mustCompleteOnboarding } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export default async function PortalLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const onOnboarding =
+    pathname === "/onboarding" || pathname.startsWith("/onboarding/");
+
   const user = await getSessionUser();
   const profile = user ? await ensureProfile(user) : null;
+  const onboardingLocked = profile ? mustCompleteOnboarding(profile) : false;
+
+  if (onboardingLocked && !onOnboarding) {
+    redirect("/onboarding");
+  }
+
+  if (onOnboarding) {
+    return <>{children}</>;
+  }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      <PortalNav email={profile?.email ?? user?.email} />
+    <div className="flex min-h-screen flex-col lg:flex-row">
+      <PortalNav
+        email={profile?.email ?? user?.email}
+        fullName={profile?.fullName}
+        avatarUrl={profile?.avatarUrl}
+        role={profile?.role}
+      />
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-          {children}
-        </div>
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>
       </main>
     </div>
   );

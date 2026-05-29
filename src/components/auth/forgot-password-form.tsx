@@ -6,6 +6,8 @@ import type { AuthState } from "@/app/(auth)/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { teko } from "@/lib/fonts/teko";
+import { cn } from "@/lib/utils";
 
 const initialState: AuthState = {};
 
@@ -16,17 +18,14 @@ export function ForgotPasswordForm() {
   );
 
   return (
-    <form
-      action={formAction}
-      className="rounded-3xl border border-border bg-card p-6 space-y-4 shadow-xl shadow-black/5"
-    >
+    <form action={formAction} className="space-y-4">
       {state.error ? (
-        <p className="rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+        <p className="bg-primary/10 px-3 py-2 text-sm text-primary">
           {state.error}
         </p>
       ) : null}
       {state.message ? (
-        <p className="rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+        <p className="bg-primary/10 px-3 py-2 text-sm text-primary">
           {state.message}
         </p>
       ) : null}
@@ -38,9 +37,14 @@ export function ForgotPasswordForm() {
           type="email"
           autoComplete="email"
           required
+          className="rounded-none"
         />
       </div>
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button
+        type="submit"
+        className={cn(teko.className, "w-full rounded-none text-xl uppercase tracking-wide")}
+        disabled={pending}
+      >
         {pending ? "Sending…" : "Send reset link"}
       </Button>
     </form>

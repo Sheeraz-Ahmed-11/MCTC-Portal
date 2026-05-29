@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MCTC Portal | Taekwondo Tournament Rosters",
   description:
-    "Manage athlete rosters for the Minnesota Collegiate Taekwondo Championship — Spring and Fall editions.",
+    "Manage athlete rosters for the Midwest Collegiate Taekwondo Championship — Spring and Fall editions.",
   icons: {
     icon: [
       { url: blackLogo.src, type: "image/svg+xml" },

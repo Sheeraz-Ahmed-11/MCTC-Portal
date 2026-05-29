@@ -1,6 +1,6 @@
 # MCTC Portal
 
-Full-stack web portal for managing athlete rosters for the **Minnesota Collegiate Taekwondo Championship (MCTC)** — held twice each year (Spring and Fall).
+Full-stack web portal for managing athlete rosters for the **Midwest Collegiate Taekwondo Championship (MCTC)** — held twice each year (Spring and Fall).
 
 ## Tech stack
 
@@ -48,6 +48,7 @@ npm run dev
    - Site URL: `http://localhost:3000` (and your Vercel preview URL when deployed)
    - Redirect URLs: `http://localhost:3000/auth/callback`, `https://*.vercel.app/auth/callback`
 5. Enable the Email provider (optional email confirmation for local dev).
+6. Configure branded auth emails and **info@mctctkd.com** as sender — see [docs/EMAIL_SETUP.md](docs/EMAIL_SETUP.md).
 
 ### Vercel (hosting)
 

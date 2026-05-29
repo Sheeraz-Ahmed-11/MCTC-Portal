@@ -24,7 +24,7 @@ interface GrowthTrendChartProps {
 
 export function GrowthTrendChart({ data }: GrowthTrendChartProps) {
   return (
-    <Card>
+    <Card className="rounded-none">
       <CardHeader>
         <CardTitle>Growth trend</CardTitle>
       </CardHeader>

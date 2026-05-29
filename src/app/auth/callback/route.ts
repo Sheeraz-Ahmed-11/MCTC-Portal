@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { ensureProfile } from "@/lib/auth";
+import { ensureProfile, getPostAuthRedirect } from "@/lib/auth";
 
 function safeNextPath(next: string | null) {
   if (next && next.startsWith("/") && !next.startsWith("//")) {
     return next;
   }
-  return "/dashboard";
+  return "/onboarding";
 }
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = safeNextPath(searchParams.get("next"));
   const authError = searchParams.get("error_description") ?? searchParams.get("error");
 
   if (authError) {
@@ -37,12 +36,14 @@ export async function GET(request: Request) {
   }
 
   try {
-    await ensureProfile(data.user);
+    const profile = await ensureProfile(data.user);
+    const destination = profile
+      ? getPostAuthRedirect(profile)
+      : safeNextPath(searchParams.get("next"));
+    return NextResponse.redirect(`${origin}${destination}`);
   } catch {
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent("Signed in but profile setup failed. Try again or contact support.")}`,
     );
   }
-
-  return NextResponse.redirect(`${origin}${next}`);
 }

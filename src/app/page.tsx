@@ -15,9 +15,8 @@ export default async function HomePage() {
       {/* Nav */}
       <header className="sticky top-0 z-50 border-b border-white/8 bg-[#0f0f0f]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <img src={logo.src} alt="MCTC" className="h-8 w-auto" />
-            <span className="text-[15px] font-semibold tracking-tight">MCTC Portal</span>
+          <Link href="/" className="flex items-center">
+            <img src={logo.src} alt="MCTC" className="h-10 w-auto" />
           </Link>
           <nav className="flex items-center gap-2">
             {user ? (
@@ -51,7 +50,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-3xl text-center">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white/80">
               <Trophy className="h-3.5 w-3.5" />
-              Minnesota Collegiate Taekwondo Championship
+              Midwest Collegiate Taekwondo Championship
             </div>
             <div className="space-y-3">
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -144,11 +143,10 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="border-t border-white/8 bg-[#0f0f0f] px-6 py-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <img src={logo.src} alt="MCTC" className="h-7 w-auto opacity-50" />
-            <span className="text-sm font-semibold text-white/30">MCTC Portal</span>
+          <Link href="/" className="flex items-center">
+            <img src={logo.src} alt="MCTC" className="h-9 w-auto opacity-50" />
           </Link>
-          <p className="text-xs text-white/25">Minnesota Collegiate Taekwondo Championship</p>
+          <p className="text-xs text-white/25">Midwest Collegiate Taekwondo Championship</p>
         </div>
       </footer>
     </div>

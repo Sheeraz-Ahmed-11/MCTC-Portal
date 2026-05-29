@@ -75,6 +75,7 @@ export async function PATCH(request: Request, { params }: Params) {
       .set({
         firstName: name.firstName,
         lastName: name.lastName,
+        avatarUrl: data.avatarUrl || null,
         dateOfBirth: data.dateOfBirth,
         gender: data.gender,
         beltRank: data.beltRank,

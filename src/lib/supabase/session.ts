@@ -40,8 +40,17 @@ function setSecurityHeaders(response: NextResponse, request: NextRequest) {
   }
 }
 
+function nextWithPathname(request: NextRequest, pathname: string) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+}
+
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+  const pathname = request.nextUrl.pathname;
+  let supabaseResponse = nextWithPathname(request, pathname);
 
   const supabase = createServerClient(supabaseUrl!, supabaseKey!, {
     cookies: {
@@ -52,7 +61,7 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value),
         );
-        supabaseResponse = NextResponse.next({ request });
+        supabaseResponse = nextWithPathname(request, pathname);
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options),
         );
@@ -64,7 +73,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
   const isAuthRoute =
     pathname.startsWith("/login") || pathname.startsWith("/signup");
   const isAuthHandler = pathname.startsWith("/auth/");
@@ -76,6 +84,7 @@ export async function updateSession(request: NextRequest) {
     url.searchParams.set("redirect", pathname);
     const redirectResponse = NextResponse.redirect(url);
     setSecurityHeaders(redirectResponse, request);
+    redirectResponse.headers.set("x-pathname", pathname);
     return redirectResponse;
   }
 
@@ -84,6 +93,7 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/dashboard";
     const redirectResponse = NextResponse.redirect(url);
     setSecurityHeaders(redirectResponse, request);
+    redirectResponse.headers.set("x-pathname", pathname);
     return redirectResponse;
   }
 

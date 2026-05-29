@@ -66,3 +66,25 @@ export async function ensureProfile(user: {
   });
 }
 
+/** Coaches must finish onboarding before other portal pages */
+export function mustCompleteOnboarding(profile: {
+  role: string;
+  onboardingCompleted: boolean;
+}) {
+  return profile.role === "coach" && !profile.onboardingCompleted;
+}
+
+/** Where to send someone right after sign-in or email confirm */
+export function getPostAuthRedirect(profile: {
+  role: string;
+  onboardingCompleted: boolean;
+}) {
+  if (mustCompleteOnboarding(profile)) {
+    return "/onboarding";
+  }
+  if (profile.role === "coach") {
+    return "/tournaments";
+  }
+  return "/dashboard";
+}
+

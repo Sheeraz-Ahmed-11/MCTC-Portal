@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       .values({
         firstName: name.firstName,
         lastName: name.lastName,
+        avatarUrl: data.avatarUrl || null,
         dateOfBirth: data.dateOfBirth,
         gender: data.gender,
         beltRank: data.beltRank,

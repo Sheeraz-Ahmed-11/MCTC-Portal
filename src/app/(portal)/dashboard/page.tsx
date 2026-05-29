@@ -23,6 +23,9 @@ export default async function DashboardPage() {
     redirect("/onboarding");
   }
   const isAdmin = profile.role === "admin";
+  if (!isAdmin) {
+    redirect("/tournaments");
+  }
 
   const [
     recentTournaments,

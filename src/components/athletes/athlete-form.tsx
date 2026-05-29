@@ -79,6 +79,16 @@ export function AthleteForm({ initial }: { initial?: Initial }) {
           defaultValue={defaultFullName}
         />
       </div>
+      <div className="space-y-2">
+        <Label htmlFor="avatarUrl">Profile photo URL</Label>
+        <Input
+          id="avatarUrl"
+          name="avatarUrl"
+          type="url"
+          placeholder="https://example.com/athlete.jpg"
+          defaultValue={initial?.avatarUrl}
+        />
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>

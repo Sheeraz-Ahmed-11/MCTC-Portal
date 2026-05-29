@@ -1,0 +1,33 @@
+# Supabase local / CLI config — link with: supabase link --project-ref <your-ref>
+# Email templates: copy HTML from supabase/templates/ into the Dashboard, or use content_path after supabase init.
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = [
+  "http://localhost:3000/**",
+  "https://*.vercel.app/**",
+]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+
+# Custom SMTP — configure in Dashboard (Authentication → SMTP) for production.
+# Use info@mctctkd.com as the sender / admin email.
+#
+# [auth.email.smtp]
+# enabled = true
+# host = "smtp.your-provider.com"
+# port = 587
+# user = "info@mctctkd.com"
+# pass = "env(SMTP_PASSWORD)"
+# admin_email = "info@mctctkd.com"
+# sender_name = "MCTC"
+
+[auth.email.template.confirmation]
+subject = "Confirm your MCTC Portal account"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your MCTC Portal password"
+content_path = "./supabase/templates/recovery.html"

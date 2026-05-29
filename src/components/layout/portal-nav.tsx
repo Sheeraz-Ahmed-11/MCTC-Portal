@@ -7,25 +7,62 @@ import {
   Trophy,
   Users,
   Settings,
+  CircleHelp,
   LogOut,
+  MoreVertical,
   Menu,
   X,
 } from "lucide-react";
 import logo from "@/images/Logos/white logo.svg";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-const links = [
+const adminLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tournaments", label: "Tournaments", icon: Trophy },
   { href: "/athletes", label: "Athletes", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function PortalNav({ email }: { email?: string }) {
+const managerLinks = [
+  { href: "/tournaments", label: "Tournaments", icon: Trophy },
+  { href: "/athletes", label: "Athletes", icon: Users },
+];
+
+export function PortalNav({
+  email,
+  fullName,
+  avatarUrl,
+  role,
+}: {
+  email?: string;
+  fullName?: string | null;
+  avatarUrl?: string | null;
+  role?: "admin" | "coach";
+}) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+  const isAdmin = role === "admin";
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target as Node)
+      ) {
+        setAccountMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [accountMenuOpen]);
+  const visibleLinks = isAdmin ? adminLinks : managerLinks;
 
   const navContent = (
     <>
@@ -33,15 +70,13 @@ export function PortalNav({ email }: { email?: string }) {
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className="inline-flex w-full items-center gap-3 rounded-2xl border border-border bg-muted px-3 py-3 text-sm font-semibold text-black transition hover:border-primary hover:bg-primary/10"
+          className="inline-flex items-center"
         >
-          <img src={logo.src} alt="MCTC logo" className="h-9 w-auto" />
-          <span>MCTC Portal</span>
+          <img src={logo.src} alt="MCTC logo" className="h-11 w-auto" />
         </Link>
-        <p className="mt-3 truncate text-sm text-muted-foreground">{email}</p>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {links.map(({ href, label, icon: Icon }) => {
+        {visibleLinks.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
@@ -49,7 +84,7 @@ export function PortalNav({ email }: { email?: string }) {
               href={href}
               onClick={() => setMobileOpen(false)}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-none px-3 py-2.5 text-sm font-medium transition-colors",
                 active
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-black",
@@ -62,21 +97,75 @@ export function PortalNav({ email }: { email?: string }) {
         })}
       </nav>
       <div className="border-t border-border p-3">
-        <form
-          action="/auth/signout"
-          method="post"
-          className="w-full"
-          onSubmit={() => setMobileOpen(false)}
-        >
+        <div ref={accountMenuRef} className="relative flex items-start justify-between px-3">
+          <div className="min-w-0">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={`${fullName ?? "Account"} profile`}
+                className="mb-1 h-8 w-8 rounded-none border border-border object-cover"
+              />
+            ) : null}
+            <p className="truncate text-sm font-medium text-foreground">{fullName ?? "Account"}</p>
+            <p className="truncate text-xs text-muted-foreground">{email}</p>
+          </div>
           <Button
-            type="submit"
+            type="button"
             variant="ghost"
-            className="w-full justify-start text-muted-foreground"
+            size="icon"
+            aria-label="Account menu"
+            className="size-8 rounded-none text-muted-foreground"
+            onClick={() => setAccountMenuOpen((open) => !open)}
           >
-            <LogOut className="size-4" />
-            Sign out
+            <MoreVertical className="size-4" />
           </Button>
-        </form>
+          {accountMenuOpen ? (
+            <div className="absolute bottom-10 right-0 z-50 w-44 rounded-none border border-border bg-sidebar p-1 shadow-lg">
+              <Link
+                href="/settings"
+                onClick={() => {
+                  setAccountMenuOpen(false);
+                  setMobileOpen(false);
+                }}
+                className={cn(
+                  "flex items-center gap-2 rounded-none px-3 py-2 text-sm transition-colors",
+                  pathname === "/settings" || pathname.startsWith("/settings/")
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-black",
+                )}
+              >
+                <Settings className="size-4 shrink-0" />
+                Settings
+              </Link>
+              <a
+                href="mailto:info@mctctkd.com?subject=MCTC%20Portal%20Help"
+                onClick={() => setAccountMenuOpen(false)}
+                className="flex items-center gap-2 rounded-none px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-black"
+              >
+                <CircleHelp className="size-4 shrink-0" />
+                Get help
+              </a>
+              <form
+                action="/auth/signout"
+                method="post"
+                className="w-full"
+                onSubmit={() => {
+                  setAccountMenuOpen(false);
+                  setMobileOpen(false);
+                }}
+              >
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  className="w-full justify-start rounded-none px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-black"
+                >
+                  <LogOut className="size-4 shrink-0" />
+                  Logout
+                </Button>
+              </form>
+            </div>
+          ) : null}
+        </div>
       </div>
     </>
   );
@@ -85,9 +174,8 @@ export function PortalNav({ email }: { email?: string }) {
     <>
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur lg:hidden">
         <div className="flex items-center gap-2">
-          <Link href="/" onClick={() => setMobileOpen(false)} className="inline-flex items-center gap-2">
-            <img src={logo.src} alt="MCTC logo" className="h-7 w-auto" />
-            <span className="font-semibold text-mctc-gold">MCTC Portal</span>
+          <Link href="/" onClick={() => setMobileOpen(false)} className="inline-flex items-center">
+            <img src={logo.src} alt="MCTC logo" className="h-10 w-auto" />
           </Link>
         </div>
         <Button
